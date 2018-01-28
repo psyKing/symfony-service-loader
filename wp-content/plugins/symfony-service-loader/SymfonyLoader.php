@@ -1,8 +1,13 @@
 <?php
 
+use Symfony\Component\DependencyInjection\Exception\ServiceNotFoundException;
+
 class SymfonyLoader
 {
-    public $serviceContainer;
+    /**
+     * @var \ContainerWbngizd\appProdDebugProjectContainer object
+     */
+    private $serviceContainer;
 
     /**
      * Loads symfony core and sets symfony service
@@ -10,11 +15,10 @@ class SymfonyLoader
      */
     private function loadServiceContainer()
     {
-        require_once sprintf('%s/vendor/autoload.php', WP_SYMFONY_PATH);
-        require_once sprintf('%s/app/AppKernel.php', WP_SYMFONY_PATH);
+        require_once WP_SYMFONY_PATH . '/vendor/autoload.php';
+        require_once WP_SYMFONY_PATH . '/app/AppKernel.php';
 
         $kernel = new AppKernel(WP_SYMFONY_ENVIRONMENT, WP_SYMFONY_DEBUG);
-        $kernel->loadClassCache();
         $kernel->boot();
 
         $this->serviceContainer = $kernel->getContainer();
@@ -26,6 +30,7 @@ class SymfonyLoader
      *
      * @param string $serviceId
      * @return object
+     * @throws Exception
      */
     public function getService($serviceId)
     {
@@ -33,7 +38,13 @@ class SymfonyLoader
             $this->loadServiceContainer();
         }
 
-        return $this->serviceContainer->get($serviceId);
+        try{
+            return $this->serviceContainer->get($serviceId);
+        }
+        catch (ServiceNotFoundException $e){
+            echo "Exception caught" . ": ",  $e->getMessage(), "\n";
+            exit;
+        }
     }
 }
 
